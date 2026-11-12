@@ -6,13 +6,17 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck disable=SC1091
 . "$HERE/../../scripts/env.sh"
 
-"$ROOT/scripts/build-runtime.sh"
+if [[ "$X64ECHO_BUILD_RUNTIME" = 1 ]]; then
+    "$ROOT/scripts/build-runtime.sh"
+fi
 
 BUILD=${X64ECHO_BENCH_BUILD:-"$ROOT/build/quick-bench"}
 CALLS=${X64ECHO_BENCH_CALLS:-100000}
 mkdir -p "$BUILD/native" "$BUILD/x86" "$BUILD/echo"
 
 CFLAGS=(-O2 -g -fPIC -Wall -Wextra -I"$HERE")
+read -r -a native_flags <<<"${X64ECHO_NATIVE_FLAGS:-}"
+read -r -a face_flags <<<"${X64ECHO_FACE_FLAGS:-}"
 
 # Native host lane.
 "$X64ECHO_HOST_CXX" "${CFLAGS[@]}" -shared \
@@ -29,7 +33,7 @@ CFLAGS=(-O2 -g -fPIC -Wall -Wextra -I"$HERE")
     -L"$BUILD/x86" -lwork -Wl,-rpath,'$ORIGIN'
 
 # Echo face and native pair for the pass-through lane.
-"$X64ECHO_CLANG" --target="$X64ECHO_TARGET" "${CFLAGS[@]}" \
+"$X64ECHO_CLANG" --target="$X64ECHO_TARGET" "${native_flags[@]}" "${CFLAGS[@]}" \
     -c "$HERE/work.cpp" -o "$BUILD/echo/work_native.o"
 "$X64ECHO_HOST_CXX" -shared -o "$BUILD/echo/libwork_host.so" \
     "$BUILD/echo/work_native.o" \
@@ -37,8 +41,9 @@ CFLAGS=(-O2 -g -fPIC -Wall -Wextra -I"$HERE")
     -lEchoHostRuntime -Wl,--as-needed -lEchoVariadic \
     -Wl,-rpath,"$X64ECHO_HOST_RUNTIME_LIB" -ldl
 
-"$X64ECHO_CLANG" --target="$X64ECHO_TARGET" -mllvm -echo-emit-face \
-    "${CFLAGS[@]}" -c "$HERE/work.cpp" -o "$BUILD/echo/work_face.o"
+"$X64ECHO_CLANG" --target="$X64ECHO_FACE_TARGET" "${face_flags[@]}" \
+    -mllvm -echo-emit-face "${CFLAGS[@]}" \
+    -c "$HERE/work.cpp" -o "$BUILD/echo/work_face.o"
 "$X64ECHO_GUEST_CXX" -fPIC -shared -o "$BUILD/echo/libwork.so" \
     "$BUILD/echo/work_face.o" \
     -Wl,--whole-archive \
