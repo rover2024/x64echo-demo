@@ -1,0 +1,18 @@
+# libc entry points that take a caller-supplied callback. A native library's calls
+# to these are --wrap'd onto Callback.c so a GUEST callback gets a host trampoline
+# instead of being handed to libc raw. One name per line; '#' comments ignored.
+#
+# Two shapes. qsort/bsearch/pthread_once call the callback DURING the call, so the
+# trampoline parks the real pointer for the duration and pops it on return.
+qsort
+qsort_r
+bsearch
+pthread_once
+# dladdr is not a callback at all, but it fails the same way: an address the guest
+# holds is the face's stub and the host's dladdr sees only host objects.
+dladdr
+# pthread_key_create REGISTERS one and libc calls it at thread exit. A key is an
+# index, so each gets its own numbered trampoline and the real destructor is kept
+# beside it. atexit is still not handled: it has no index to key on.
+pthread_key_create
+pthread_key_delete

@@ -1,0 +1,43 @@
+# LLVM Integration
+
+X64Echo extends LLVM and Clang with the Echo ABI. The public repository keeps
+only the patch set and build helpers; the full upstream source tree is not
+vendored.
+
+The current patch baseline is:
+
+```text
+llvmorg-21.1.6
+```
+
+## Fetch
+
+```bash
+./llvm/scripts/fetch-llvm.sh
+```
+
+This creates a shallow checkout under `build/llvm-project`.
+
+## Apply
+
+```bash
+./llvm/scripts/apply-patches.sh
+```
+
+The script applies every patch in `llvm/patches/` in filename order and stops
+on the first failure.
+
+## Build
+
+Use the upstream LLVM build instructions with Clang enabled. X64Echo requires
+the LLVM and Clang libraries, including the target backends for X86, AArch64
+and RISC-V.
+
+The public prebuilt devkit will pin a tested compiler build and avoid requiring
+users to build LLVM. Until that package is available, use:
+
+```bash
+export X64ECHO_CLANG=/path/to/echo-clang++
+```
+
+as described in [../docs/build-and-run.md](../docs/build-and-run.md).

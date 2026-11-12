@@ -1,0 +1,33 @@
+# stdio functions the native library's calls are --wrap'd onto libEchoStdio
+# (docs/07 stream family). One name per line; '#' comments ignored. The Echo native
+# link turns each into -Wl,--wrap=<name>. Cover the family that survives -O2 folding
+# (fputs->fwrite, printf->puts, fprintf->fwrite), so list the fold TARGETS too.
+fwrite
+fread
+fputs
+fgets
+fputc
+fgetc
+putc
+getc
+fflush
+fclose
+fseek
+ftell
+fseeko
+ftello
+fseeko64
+ftello64
+fgetpos
+fsetpos
+fgetpos64
+fsetpos64
+feof
+ferror
+clearerr
+fileno
+setvbuf
+fprintf
+vfprintf
+fscanf
+vfscanf

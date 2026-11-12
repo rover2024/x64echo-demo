@@ -1,0 +1,24 @@
+name: source-checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  shell-and-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check shell syntax
+        run: |
+          while IFS= read -r file; do
+            bash -n "$file"
+          done < <(find scripts examples tests benchmarks llvm/scripts -name '*.sh' -type f)
+      - name: Check for private paths and obvious credentials
+        run: |
+          if grep -RInE '/mnt/sda/rover2024|/home/(functioner|overworld)|10\.[0-9]+\.[0-9]+\.[0-9]+' \
+              --exclude-dir=.git --exclude-dir=.cache .; then
+            echo "private path or address found" >&2
+            exit 1
+          fi

@@ -65,4 +65,6 @@ vcpkg_installed/
 
 # test output & cache
 Testing/
+
+# Local toolchain and generated data
 .cache/

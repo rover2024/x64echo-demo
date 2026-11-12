@@ -1,0 +1,36 @@
+# x64echo — vtable-redirect exclusion list (codegen policy DATA, not compiler source)
+#
+# One fully-qualified BASE class name per line ('#' starts a comment). A class that
+# is, or derives from, any base listed here keeps its NATIVE vtable in both worlds:
+# it is NOT C-1-redirected to the face vtable, and the backend pass does not stub its
+# virtuals. Use this for host-internal polymorphic types that uninstrumented runtime
+# code (libstdc++ &c.) dispatches on DIRECTLY from host context -- redirecting those
+# makes the raw virtual call cross to the guest and crash.
+#
+# The compiler holds only the generic mechanism (walk base classes, match this list,
+# read via ECHO_NOREDIRECT_FILE). Adding an entry needs no clang rebuild.
+#
+# std::locale facets: virtual-deleted by std::locale teardown inside libstdc++
+# (e.g. muParser's change_dec_sep : std::numpunct, installed in a static std::locale).
+std::locale::facet
+
+# Qt's resource registry root: an anonymous-namespace, all-inline-virtual (no key
+# function) type QtCore dispatches on directly host-side while resolving a QResource
+# (e.g. reading the embedded :/qt/etc/qt.conf during QLibraryInfo init). A bare leaf
+# name matches it (its qualified name carries an unstable anonymous-namespace prefix).
+QResourceRoot
+
+# Qt's system-locale backend: its virtual query() reads the HOST OS locale, so it must
+# run host-side. Redirecting its vtable makes updateSystemPrivate()'s host-side query()
+# reenter the guest during QLocale construction and crash. Host-internal; guest never
+# subclasses it.
+QSystemLocale
+
+# std::thread's internal state object: the std::thread constructor hands a
+# _State_impl<...> to libstdc++'s execute_native_thread_routine, which virtual-calls
+# _M_run() DIRECTLY, on a host thread, from code Echo never compiled. Redirecting that
+# vtable makes the host thread jump into x86 bytes: a background thread (named e.g.
+# "rocksdb:low") takes SIGILL at a PC inside the guest address range, with not one
+# symbol on the stack -- the host unwinder cannot read guest frames. Host-internal;
+# the guest never subclasses it. Any library that uses std::thread hits this.
+std::thread::_State

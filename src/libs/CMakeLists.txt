@@ -1,0 +1,11 @@
+if(ECHO_BUILD_GUEST_TARGETS)
+add_subdirectory(GuestRuntime)
+add_subdirectory(GuestThreadHook)
+    add_subdirectory(GuestInitObj)
+    add_subdirectory(GuestHooks)
+endif()
+
+add_subdirectory(Variadic)
+add_subdirectory(HostRuntime)
+add_subdirectory(HostInitObj)
+add_subdirectory(HostHooks)

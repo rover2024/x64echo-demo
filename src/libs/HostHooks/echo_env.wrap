@@ -1,0 +1,8 @@
+# Environment lookups a native library makes are --wrap'd onto Env.c so a variable
+# the GUEST set at run time is visible. One name per line; '#' comments ignored.
+#
+# Only the read side is wrapped. A native setenv writes the host's vector, which the
+# guest does not read back, but nothing in the libraries ported so far does that and
+# a write bridge needs a policy for who owns a name.
+getenv
+secure_getenv
