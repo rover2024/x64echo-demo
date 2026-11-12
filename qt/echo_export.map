@@ -1,0 +1,18 @@
+/* Echo ABI export map, added to the NATIVE link alongside a library's own
+   --version-script (if any). It forces the Echo handshake symbols (__echo_publish_*,
+   __echo_set_facevts, __echo_facevt$*, __echo_redisp$*, __echo_entry, ...) into the
+   dynamic export table so the bootstrap's dlsym can find them.
+
+   Why this instead of dropping the library's version script: stripping the script also
+   removes the library's version-node DEFINITIONS, which breaks any .symver'd symbol --
+   notably Qt's qt_version_tag@Qt_6.x (qversiontagging.cpp), whose references become
+   "undefined version" at link time. Keeping the script and ADDING this map preserves
+   those nodes. A NAMED node (not anonymous `{...}`) is required so it composes with a
+   library's own named versions (OPENSSL_3.0.0, Qt_6) -- ld forbids mixing anonymous and
+   named version tags. The explicit `__echo_*` glob outranks a restrictive `local: *`
+   (OpenSSL's libcrypto.ld), so the handshake symbols stay global; for a library with no
+   version script this map leaves all other symbols global (no `local:` here). */
+ECHO_ABI {
+  global:
+    __echo_*;
+};

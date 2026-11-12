@@ -6,6 +6,12 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck disable=SC1091
 . "$HERE/../../scripts/env.sh"
 
+QT_CONFIG=${X64ECHO_QT_CONFIG:-"$ROOT/.cache/qt/6.8.4/config.sh"}
+if [[ -f "$QT_CONFIG" ]]; then
+    # shellcheck disable=SC1091
+    . "$QT_CONFIG"
+fi
+
 : "${X64ECHO_QT_SOURCE:?Set X64ECHO_QT_SOURCE to the Qt 6.8.4 source tree}"
 : "${X64ECHO_QT_FACE_DIR:?Set X64ECHO_QT_FACE_DIR to the Echo face libraries}"
 : "${X64ECHO_QT_NATIVE_DIR:?Set X64ECHO_QT_NATIVE_DIR to the Echo native libraries}"
@@ -91,6 +97,7 @@ for relative in "${tests[@]}"; do
         -Wl,-rpath-link,"$X64ECHO_GUEST_RUNTIME_LIB" \
         -Wl,-rpath,"$BUILD/face" -pthread -ldl
 
+    set +e
     result=$(
         LD_LIBRARY_PATH="$BUILD/native:$X64ECHO_HOST_RUNTIME_LIB" \
             "$X64ECHO_QEMU" "${qemu_args[@]}" \
@@ -100,11 +107,14 @@ for relative in "${tests[@]}"; do
             -E QTEST_NO_WATCHDOG=1 \
             "$output_dir/$name" 2>&1
     )
+    test_status=$?
+    set -e
     printf '%s\n' "$result"
 
     totals=$(grep -aoE 'Totals: [0-9]+ passed, [0-9]+ failed' <<<"$result" |
         tail -1)
-    if [[ -z "$totals" ]] || [[ "$totals" != *", 0 failed" ]]; then
+    if [[ $test_status -ne 0 ]] || [[ -z "$totals" ]] ||
+        [[ "$totals" != *", 0 failed" ]]; then
         echo "Qt test failed: $name" >&2
         failed=1
     fi
