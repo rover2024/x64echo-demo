@@ -1,0 +1,20 @@
+name: e2e
+
+on:
+  workflow_dispatch:
+
+jobs:
+  quick-suite:
+    runs-on: [self-hosted, linux, x64echo-e2e]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check runner configuration
+        run: |
+          test -f .cache/config.sh
+          test -x "$(sed -n 's/^export X64ECHO_CLANG=//p' .cache/config.sh)"
+      - name: Runtime and C++ example
+        run: ./tests/quick/run.sh
+      - name: Quick benchmark
+        run: ./benchmarks/quick/run.sh
+      - name: Qt quick tests
+        run: ./tests/qt/run.sh

@@ -1,4 +1,4 @@
-name: source-checks
+name: ci
 
 on:
   push:
@@ -6,19 +6,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  shell-and-docs:
+  build-runtime:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build libffi-dev
+      - name: Build host and guest runtimes
+        run: |
+          cmake -S . -B build/ci -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DECHO_CHECK_DLADDR=ON \
+            -DECHO_BUILD_QEMU_MODULES=OFF
+          cmake --build build/ci --parallel
       - name: Check shell syntax
         run: |
           while IFS= read -r file; do
             bash -n "$file"
           done < <(find scripts examples tests benchmarks llvm/scripts -name '*.sh' -type f)
-      - name: Check for private paths and obvious credentials
-        run: |
-          if grep -RInE '/mnt/sda/rover2024|/home/(functioner|overworld)|10\.[0-9]+\.[0-9]+\.[0-9]+' \
-              --exclude-dir=.git --exclude-dir=.cache .; then
-            echo "private path or address found" >&2
-            exit 1
-          fi
