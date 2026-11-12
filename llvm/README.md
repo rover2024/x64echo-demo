@@ -29,12 +29,24 @@ on the first failure.
 
 ## Build
 
-Use the upstream LLVM build instructions with Clang enabled. X64Echo requires
-the LLVM and Clang libraries, including the target backends for X86, AArch64
-and RISC-V.
+Use the upstream LLVM build instructions with Clang and LLD enabled. The
+developer preview targets one guest/host pair, so build only the two required
+backends:
 
-The public prebuilt devkit will pin a tested compiler build and avoid requiring
-users to build LLVM. Until that package is available, use:
+```cmake
+-DLLVM_ENABLE_PROJECTS="clang;lld"
+-DLLVM_TARGETS_TO_BUILD="X86;AArch64"
+```
+
+For the AArch64 devkit, also use an AArch64 GNU sysroot and:
+
+```cmake
+-DLLVM_DEFAULT_TARGET_TRIPLE="aarch64-linux-gnu"
+-DLLVM_HOST_TRIPLE="aarch64-linux-gnu"
+```
+
+The public AArch64 devkit pins the tested Echo Clang build. To use a custom
+compiler instead:
 
 ```bash
 export X64ECHO_CLANG=/path/to/echo-clang++

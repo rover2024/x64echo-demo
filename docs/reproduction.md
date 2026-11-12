@@ -1,7 +1,8 @@
 # Reproduction Notes
 
-The Qt 6.8.4 quick-test selection in this repository comes from a verified
-QEMU-X64Echo run on an AArch64 NVIDIA DGX Spark host.
+The repository was validated on an AArch64 NVIDIA DGX Spark host using the
+published-style AArch64 devkit. Qt 6.8.4 source was fetched at the pinned
+commit and both Qt halves were built locally by `tests/qt/bootstrap.sh`.
 
 The four QtCore tests used by `tests/qt/run.sh` produced:
 
@@ -14,9 +15,10 @@ The four QtCore tests used by `tests/qt/run.sh` produced:
 
 Total: 1,311 passed, 0 failed, 9 skipped.
 
-The ARM64 performance reproduction produced a 5.07x geometric mean over QEMU
-full emulation, compared with 5.13x recomputed from the frozen paper table.
+The quick C++ correctness suite and Hello C++ example also pass. A local
+100,000-call smoke benchmark measured approximately 4.93x over QEMU full
+emulation; this single-run number is illustrative rather than a paper
+replacement.
 
-These results document the source environment used to select the public quick
-tests. They are not yet produced automatically by this repository's release
-artifacts.
+These commands are reproducible from the public repository checkout and do not
+require prebuilt Qt binaries.
